@@ -65,6 +65,18 @@ func AggregateClientSigner(ns string) *corev1.Secret {
 
 func KASAggregatorCertSecret(ns string) *corev1.Secret { return secretFor(ns, "kas-aggregator-crt") }
 
+func KubeControlPlaneSigner(ns string) *corev1.Secret {
+	return secretFor(ns, "kube-control-plane-signer")
+}
+
+func KubeSchedulerClientCertSecret(ns string) *corev1.Secret {
+	return secretFor(ns, "kube-scheduler-client")
+}
+
+func KubeControllerManagerClientCertSecret(ns string) *corev1.Secret {
+	return secretFor(ns, "kube-controller-manager")
+}
+
 func KASAdminClientCertSecret(ns string) *corev1.Secret { return secretFor(ns, "kas-admin-client") }
 
 func KASMachineBootstrapClientCertSecret(ns string) *corev1.Secret {
