@@ -1275,14 +1275,6 @@ func (r *HostedControlPlaneReconciler) reconcilePKI(ctx context.Context, hcp *hy
 		return err
 	}
 
-	// KAS admin client cert secret
-	kasAdminClientCertSecret := manifests.KASAdminClientCertSecret(hcp.Namespace)
-	if _, err := createOrUpdate(ctx, r, kasAdminClientCertSecret, func() error {
-		return pki.ReconcileKASAdminClientCertSecret(kasAdminClientCertSecret, rootCASecret, p.OwnerRef)
-	}); err != nil {
-		return fmt.Errorf("failed to reconcile kas admin client secret: %w", err)
-	}
-
 	// KAS bootstrap client cert secret
 	kasBootstrapClientCertSecret := manifests.KASMachineBootstrapClientCertSecret(hcp.Namespace)
 	if _, err := createOrUpdate(ctx, r, kasBootstrapClientCertSecret, func() error {
@@ -1633,7 +1625,7 @@ func (r *HostedControlPlaneReconciler) reconcileKubeAPIServer(ctx context.Contex
 		return fmt.Errorf("failed to get root ca cert secret: %w", err)
 	}
 
-	clientCertSecret := manifests.KASAdminClientCertSecret(hcp.Namespace)
+	clientCertSecret := manifests.SystemAdminClientCertSecret(hcp.Namespace)
 	if err := r.Get(ctx, client.ObjectKeyFromObject(clientCertSecret), clientCertSecret); err != nil {
 		return fmt.Errorf("failed to get admin client cert secret: %w", err)
 	}
