@@ -542,7 +542,7 @@ func buildKASVolumeAggregatorCert(v *corev1.Volume) {
 		v.Secret = &corev1.SecretVolumeSource{}
 	}
 	v.Secret.DefaultMode = pointer.Int32Ptr(416)
-	v.Secret.SecretName = manifests.KASAggregatorCertSecret("").Name
+	v.Secret.SecretName = manifests.AggregateClientSigner("").Name
 }
 
 func kasVolumeAggregatorCA() *corev1.Volume {
