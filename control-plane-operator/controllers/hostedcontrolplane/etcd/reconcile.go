@@ -98,6 +98,16 @@ func ReconcileStatefulSet(ss *appsv1.StatefulSet, p *EtcdParams) error {
 				},
 			},
 		},
+		{
+			Name: "etcd-ca",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: manifests.EtcdSignerCAConfigMap(ss.Namespace).Name,
+					},
+				},
+			},
+		},
 	}
 
 	p.DeploymentConfig.ApplyToStatefulSet(ss)
@@ -146,11 +156,11 @@ func buildEtcdContainer(p *EtcdParams, namespace string) func(c *corev1.Containe
 --peer-client-cert-auth=true \
 --peer-cert-file=/etc/etcd/tls/peer/peer.crt \
 --peer-key-file=/etc/etcd/tls/peer/peer.key \
---peer-trusted-ca-file=/etc/etcd/tls/peer/peer-ca.crt \
+--peer-trusted-ca-file=/etc/etcd/tls/etcd-ca/ca.crt \
 --client-cert-auth=true \
 --cert-file=/etc/etcd/tls/server/server.crt \
 --key-file=/etc/etcd/tls/server/server.key \
---trusted-ca-file=/etc/etcd/tls/server/server-ca.crt
+--trusted-ca-file=/etc/etcd/tls/etcd-ca/ca.crt
 `
 
 		var members []string
@@ -179,6 +189,10 @@ func buildEtcdContainer(p *EtcdParams, namespace string) func(c *corev1.Containe
 			{
 				Name:      "client-tls",
 				MountPath: "/etc/etcd/tls/client",
+			},
+			{
+				Name:      "etcd-ca",
+				MountPath: "/etc/etcd/tls/etcd-ca",
 			},
 		}
 		c.Env = []corev1.EnvVar{
@@ -228,7 +242,7 @@ func buildEtcdContainer(p *EtcdParams, namespace string) func(c *corev1.Containe
 			ProbeHandler: corev1.ProbeHandler{
 				Exec: &corev1.ExecAction{
 					Command: []string{"/bin/sh", "-c",
-						"/usr/bin/etcdctl --cacert /etc/etcd/tls/client/etcd-client-ca.crt --cert /etc/etcd/tls/client/etcd-client.crt --key /etc/etcd/tls/client/etcd-client.key --endpoints=localhost:2379 endpoint health"},
+						"/usr/bin/etcdctl --cacert /etc/etcd/tls/etcd-ca/ca.crt --cert /etc/etcd/tls/client/etcd-client.crt --key /etc/etcd/tls/client/etcd-client.key --endpoints=localhost:2379 endpoint health"},
 				},
 			},
 			InitialDelaySeconds: 5,
