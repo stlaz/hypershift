@@ -70,11 +70,11 @@ func ReconcileKASAggregatorCertSecret(secret, ca *corev1.Secret, ownerRef config
 }
 
 func ReconcileKubeSchedulerClientCertSecret(secret, ca *corev1.Secret, ownerRef config.OwnerRef) error {
-	return reconcileSignedCert(secret, ca, ownerRef, "system:kube-scheduler", []string{}, X509UsageClientAuth)
+	return reconcileSignedCert(secret, ca, ownerRef, "system:kube-scheduler", []string{"kubernetes"}, X509UsageClientAuth)
 }
 
 func ReconcileKubeControllerManagerClientCertSecret(secret, ca *corev1.Secret, ownerRef config.OwnerRef) error {
-	return reconcileSignedCert(secret, ca, ownerRef, "system:kube-controller-manager", []string{}, X509UsageClientAuth)
+	return reconcileSignedCert(secret, ca, ownerRef, "system:kube-controller-manager", []string{"kubernetes"}, X509UsageClientAuth)
 }
 
 func ReconcileSystemAdminClientCertSecret(secret, ca *corev1.Secret, ownerRef config.OwnerRef) error {
