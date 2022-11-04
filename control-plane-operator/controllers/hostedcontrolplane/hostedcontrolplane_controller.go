@@ -1224,10 +1224,25 @@ func (r *HostedControlPlaneReconciler) reconcilePKI(ctx context.Context, hcp *hy
 		return fmt.Errorf("failed to reconcile root CA configmap: %w", err)
 	}
 
+	// Etcd signer for all the etcd-related certs
+	etcdSignerSecret := manifests.EtcdSignerSecret(hcp.Namespace)
+	if _, err := createOrUpdate(ctx, r, etcdSignerSecret, func() error {
+		return pki.ReconcileEtcdSignerSecret(etcdSignerSecret, p.OwnerRef)
+	}); err != nil {
+		return fmt.Errorf("failed to reconcile etcd signer CA secret: %w", err)
+	}
+
+	etcdSignerCM := manifests.EtcdSignerCAConfigMap(hcp.Namespace)
+	if _, err := createOrUpdate(ctx, r, etcdSignerCM, func() error {
+		return pki.ReconcileEtcdSignerConfigMap(etcdSignerCM, p.OwnerRef, etcdSignerSecret)
+	}); err != nil {
+		return fmt.Errorf("failed to reconcile etcd signer CA configmap: %w", err)
+	}
+
 	// Etcd client secret
 	etcdClientSecret := manifests.EtcdClientSecret(hcp.Namespace)
 	if _, err := createOrUpdate(ctx, r, etcdClientSecret, func() error {
-		return pki.ReconcileEtcdClientSecret(etcdClientSecret, rootCASecret, p.OwnerRef)
+		return pki.ReconcileEtcdClientSecret(etcdClientSecret, etcdSignerSecret, p.OwnerRef)
 	}); err != nil {
 		return fmt.Errorf("failed to reconcile etcd client secret: %w", err)
 	}
@@ -1235,7 +1250,7 @@ func (r *HostedControlPlaneReconciler) reconcilePKI(ctx context.Context, hcp *hy
 	// Etcd server secret
 	etcdServerSecret := manifests.EtcdServerSecret(hcp.Namespace)
 	if _, err := createOrUpdate(ctx, r, etcdServerSecret, func() error {
-		return pki.ReconcileEtcdServerSecret(etcdServerSecret, rootCASecret, p.OwnerRef)
+		return pki.ReconcileEtcdServerSecret(etcdServerSecret, etcdSignerSecret, p.OwnerRef)
 	}); err != nil {
 		return fmt.Errorf("failed to reconcile etcd server secret: %w", err)
 	}
@@ -1243,7 +1258,7 @@ func (r *HostedControlPlaneReconciler) reconcilePKI(ctx context.Context, hcp *hy
 	// Etcd peer secret
 	etcdPeerSecret := manifests.EtcdPeerSecret(hcp.Namespace)
 	if _, err := createOrUpdate(ctx, r, etcdPeerSecret, func() error {
-		return pki.ReconcileEtcdPeerSecret(etcdPeerSecret, rootCASecret, p.OwnerRef)
+		return pki.ReconcileEtcdPeerSecret(etcdPeerSecret, etcdSignerSecret, p.OwnerRef)
 	}); err != nil {
 		return fmt.Errorf("failed to reconcile etcd peer secret: %w", err)
 	}
